@@ -1,0 +1,26 @@
+# k8s-web-app/04-api-configmap.yaml
+# ConfigMap = APIのnginx設定（/health と / の2エンドポイント）
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+  namespace: k8s-web-app
+data:
+  default.conf: |
+    server {
+        listen 80;
+        server_name localhost;
+
+        # ヘルスチェック
+        location /health {
+            return 200 '{"status": "ok", "service": "api"}';
+            add_header Content-Type application/json;
+        }
+
+        # APIエンドポイント
+        location / {
+            return 200 '{"message": "Welcome to the API"}';
+            add_header Content-Type application/json;
+        }
+    }

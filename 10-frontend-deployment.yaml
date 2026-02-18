@@ -1,0 +1,47 @@
+# k8s-web-app/10-frontend-deployment.yaml
+# Frontend Deployment = ホールのスタッフ配置
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: k8s-web-app
+spec:
+  replicas: 2                      # フロントエンドも2台で冗長化
+  selector:
+    matchLabels:
+      app: frontend                # ↓ template.labels.app と一致
+  template:
+    metadata:
+      labels:
+        app: frontend              # ↑ selector.matchLabels と一致 ↔ frontend-svc の selector
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25        # nginx で静的ファイル配信 + リバースプロキシ
+          ports:
+            - containerPort: 80    # nginx デフォルトポート → frontend-svc:80 から到達
+
+          # ConfigMap(frontend-config) から nginx設定 と HTML を別々にマウント
+          volumeMounts:
+            - name: frontend-conf
+              mountPath: /etc/nginx/conf.d       # nginx設定ファイル（proxy_pass含む）
+              readOnly: true
+            - name: frontend-html
+              mountPath: /usr/share/nginx/html   # HTML（nginx のドキュメントルート）
+              readOnly: true
+
+      volumes:
+        # 1つの ConfigMap から default.conf と index.html を別パスに配置
+        - name: frontend-conf
+          configMap:
+            name: frontend-config
+            items:
+              - key: default.conf  # nginx設定を取り出す
+                path: default.conf
+        - name: frontend-html
+          configMap:
+            name: frontend-config
+            items:
+              - key: index.html    # HTMLを取り出す
+                path: index.html

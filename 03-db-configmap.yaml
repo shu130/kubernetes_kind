@@ -1,0 +1,21 @@
+# k8s-web-app/03-db-configmap.yaml
+# ConfigMap = DBの初期化設定（環境変数 + 初期化SQL）
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-config
+  namespace: k8s-web-app
+data:
+  # envFrom で環境変数として注入される
+  POSTGRES_DB: "webapp"
+  POSTGRES_USER: "appuser"
+
+  # volume mount でファイルとして /docker-entrypoint-initdb.d/ に配置される
+  init.sql: |
+    CREATE TABLE IF NOT EXISTS health_check (
+      id SERIAL PRIMARY KEY,
+      status VARCHAR(20) DEFAULT 'ok',
+      checked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    INSERT INTO health_check (status) VALUES ('ok');

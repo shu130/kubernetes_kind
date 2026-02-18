@@ -1,0 +1,50 @@
+# k8s-web-app/06-db-deployment.yaml
+# DB Deployment = 食材倉庫のスタッフ配置
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db
+  namespace: k8s-web-app
+spec:
+  replicas: 1                      # DBは1台（ステートフルなため冗長化にはレプリケーション設計が必要）
+  selector:
+    matchLabels:
+      app: db                      # ↓ template.labels.app と一致
+  template:
+    metadata:
+      labels:
+        app: db                    # ↑ selector.matchLabels と一致 ↔ db-svc の selector
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16       # PostgreSQL 16
+          ports:
+            - containerPort: 5432  # PostgreSQL デフォルトポート → db-svc:5432 から到達
+
+          # ConfigMap(db-config) から POSTGRES_DB, POSTGRES_USER を環境変数で一括注入
+          envFrom:
+            - configMapRef:
+                name: db-config
+
+          # Secret(db-secret) から POSTGRES_PASSWORD を環境変数で注入
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: POSTGRES_PASSWORD
+
+          # ConfigMap(db-config) の init.sql を初期化ディレクトリにマウント
+          volumeMounts:
+            - name: init-sql
+              mountPath: /docker-entrypoint-initdb.d  # PostgreSQL が初回起動時に自動実行
+              readOnly: true
+
+      volumes:
+        - name: init-sql
+          configMap:
+            name: db-config        # ConfigMap: db-config から
+            items:
+              - key: init.sql      # init.sql キーだけを
+                path: init.sql     # ファイルとして取り出す

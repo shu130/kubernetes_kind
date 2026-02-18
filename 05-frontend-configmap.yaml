@@ -1,0 +1,66 @@
+# k8s-web-app/05-frontend-configmap.yaml
+# ConfigMap = フロントエンドの設定（nginx設定 + HTML）
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: k8s-web-app
+data:
+  # nginx設定（/api へのリクエストを api-svc に転送）
+  default.conf: |
+    server {
+        listen 80;
+        server_name localhost;
+
+        # 静的ファイルの配信
+        location / {
+            root /usr/share/nginx/html;
+            index index.html;
+        }
+
+        # /api へのリクエストを api-svc に転送
+        location /api/ {
+            proxy_pass http://api-svc/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+    }
+
+  # トップページHTML（動作確認用）
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head>
+      <meta charset="UTF-8">
+      <title>k8s Web App</title>
+      <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        h1 { color: #326CE5; }
+        .status { padding: 15px; border-radius: 8px; margin: 10px 0; }
+        .ok { background: #e8f5e9; border: 1px solid #4CAF50; }
+        .info { background: #e3f2fd; border: 1px solid #2196F3; }
+        code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; }
+      </style>
+    </head>
+    <body>
+      <h1>☸️ k8s Web App</h1>
+      <p>Kubernetes設計・構築メモ — 第7回 総合演習</p>
+
+      <div class="status ok">
+        ✅ フロントエンドは正常に動作しています
+      </div>
+
+      <div class="status info">
+        📡 APIの状態を確認するには：<br>
+        <code>curl http://localhost:8080/api/health</code>
+      </div>
+
+      <h2>構成</h2>
+      <ul>
+        <li>🏪 Frontend: nginx（このページ）</li>
+        <li>🍳 API: nginx（リバースプロキシ）</li>
+        <li>🗄️ DB: PostgreSQL</li>
+      </ul>
+    </body>
+    </html>

@@ -1,0 +1,16 @@
+# k8s-web-app/11-frontend-service.yaml
+# Frontend Service = ホールの直通電話（NodePort：唯一の外部公開窓口）
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-svc
+  namespace: k8s-web-app
+spec:
+  type: NodePort                # 外部からアクセス可能（唯一の外部公開 Service）
+  selector:
+    app: frontend               # ↔ Deployment(frontend) の labels.app: frontend にマッチ → 2台にロードバランス
+  ports:
+    - port: 80                  # Service:80 → Pod:80
+      targetPort: 80
+      nodePort: 30080           # Node の 30080 番ポートで外部公開

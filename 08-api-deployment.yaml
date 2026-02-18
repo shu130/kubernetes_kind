@@ -1,0 +1,34 @@
+# k8s-web-app/08-api-deployment.yaml
+# API Deployment = キッチンのスタッフ配置
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: k8s-web-app
+spec:
+  replicas: 2                      # APIは2台で冗長化（1台が落ちても Service が残りに振り分け）
+  selector:
+    matchLabels:
+      app: api                     # ↓ template.labels.app と一致
+  template:
+    metadata:
+      labels:
+        app: api                   # ↑ selector.matchLabels と一致 ↔ api-svc の selector
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25        # nginx で代用（将来 Express/FastAPI 等に差し替え可能）
+          ports:
+            - containerPort: 80    # nginx デフォルトポート → api-svc:80 から到達
+
+          # ConfigMap(api-config) の default.conf を nginx 設定ディレクトリにマウント
+          volumeMounts:
+            - name: api-conf
+              mountPath: /etc/nginx/conf.d
+              readOnly: true
+
+      volumes:
+        - name: api-conf
+          configMap:
+            name: api-config       # ConfigMap: api-config の default.conf をマウント

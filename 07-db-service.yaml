@@ -1,0 +1,15 @@
+# k8s-web-app/07-db-service.yaml
+# DB Service = 食材倉庫の内線電話（ClusterIP：内部からのみアクセス）
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-svc
+  namespace: k8s-web-app
+spec:
+  type: ClusterIP               # 内部からのみアクセス（外部公開なし）
+  selector:
+    app: db                     # ↔ Deployment(db) の labels.app: db にマッチ
+  ports:
+    - port: 5432                # Service:5432 → Pod:5432
+      targetPort: 5432
