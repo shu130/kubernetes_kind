@@ -106,4 +106,3 @@ kubectl delete namespace k8s-web-app
 ## 関連
 
 - Qiita 記事：[Kubernetes設計・構築メモ 第7回 総合演習](https://github.com/shu130/kubernetes_kind)
-- 詳細仕様：[k8s-web-app-spec.md](../specs/k8s-web-app-spec.md)
